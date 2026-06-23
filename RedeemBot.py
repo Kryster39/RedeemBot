@@ -63,3 +63,5 @@ async def viewall(ctx):
         mark_viewed(user_id, new_unseen)
 
     await ctx.send(" ".join(output))
+
+bot.run(TOKEN)
