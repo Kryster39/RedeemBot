@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import os
 import re
+
 from database import *
 
 TOKEN = os.getenv("DISCORD_TOKEN")
@@ -19,85 +20,46 @@ async def on_ready():
     print(f"Bot online: {bot.user}")
 
 
-# update
+# =========================
+# upload (原 update)
+# =========================
 @bot.command()
-async def update(ctx, *args):
+async def upload(ctx, *args):
     valid = [c for c in args if CODE_PATTERN.match(c)]
     new_codes = add_codes(valid)
 
     if new_codes:
-        await ctx.send("新增: " + " ".join(new_codes))
+        await ctx.send("新增兌換碼: " + " ".join(new_codes))
     else:
-        await ctx.send("沒有新增任何code")
+        await ctx.send("沒有新增有效兌換碼")
 
 
-# view
+# =========================
+# viewall (原 viewed)
+# =========================
 @bot.command()
-async def view(ctx):
+async def viewall(ctx):
     user_id = str(ctx.author.id)
-    unread = get_unread(user_id)
 
-    if not unread:
-        await ctx.send("沒有未讀")
+    all_codes = get_all_codes()
+    viewed = set(get_viewed(user_id))
+
+    if not all_codes:
+        await ctx.send("目前沒有兌換碼")
         return
 
-    mark_viewed(user_id, unread)
-    await ctx.send(" ".join(unread))
+    output = []
+    new_unseen = []
 
+    for code in all_codes:
+        if code in viewed:
+            output.append(code)
+        else:
+            output.append(f"{code}(new)")
+            new_unseen.append(code)
 
-# viewed
-@bot.command()
-async def viewed(ctx):
-    user_id = str(ctx.author.id)
-    data = get_user_codes(user_id, "viewed")
+    # 新看到的標記為已看過
+    if new_unseen:
+        mark_viewed(user_id, new_unseen)
 
-    if not data:
-        await ctx.send("沒有已讀")
-        return
-
-    await ctx.send(" ".join(data))
-
-
-# redeem
-@bot.command()
-async def redeem(ctx):
-    user_id = str(ctx.author.id)
-    viewed = get_user_codes(user_id, "viewed")
-
-    if not viewed:
-        await ctx.send("沒有可兌換")
-        return
-
-    await ctx.send("確定兌換？ yes/no")
-
-    def check(m):
-        return m.author == ctx.author and m.channel == ctx.channel
-
-    try:
-        msg = await bot.wait_for("message", timeout=30, check=check)
-    except:
-        await ctx.send("逾時")
-        return
-
-    if msg.content.lower() != "yes":
-        await ctx.send("取消")
-        return
-
-    mark_redeemed(user_id)
-    await ctx.send("已兌換")
-
-
-# redeemed
-@bot.command()
-async def redeemed(ctx):
-    user_id = str(ctx.author.id)
-    data = get_user_codes(user_id, "redeemed")
-
-    if not data:
-        await ctx.send("沒有已兌換")
-        return
-
-    await ctx.send(" ".join(data))
-
-
-bot.run(TOKEN)
+    await ctx.send(" ".join(output))
