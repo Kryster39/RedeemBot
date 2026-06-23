@@ -91,7 +91,7 @@ def get_unread(user_id):
     c.execute("""
     SELECT code FROM codes
     WHERE code NOT IN (
-        SELECT code FROM user_codes WHERE user_id=?
+        SELECT code FROM user_viewed WHERE user_id=?
     )
     """, (user_id,))
 
