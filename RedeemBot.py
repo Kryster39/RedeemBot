@@ -34,6 +34,19 @@ async def upload(ctx, *args):
         await ctx.send("沒有新增有效兌換碼")
 
 
+# view
+@bot.command()
+async def view(ctx):
+    user_id = str(ctx.author.id)
+    unread = get_unread(user_id)
+
+    if not unread:
+        await ctx.send("沒有未讀")
+        return
+
+    mark_viewed(user_id, unread)
+    await ctx.send(" ".join(unread))
+
 # =========================
 # viewall (原 viewed)
 # =========================

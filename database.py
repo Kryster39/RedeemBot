@@ -84,6 +84,20 @@ def get_viewed(user_id):
     conn.close()
     return rows
 
+def get_unread(user_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+
+    c.execute("""
+    SELECT code FROM codes
+    WHERE code NOT IN (
+        SELECT code FROM user_codes WHERE user_id=?
+    )
+    """, (user_id,))
+
+    rows = [r[0] for r in c.fetchall()]
+    conn.close()
+    return rows
 
 def get_unviewed(user_id):
     conn = sqlite3.connect(DB_NAME)
